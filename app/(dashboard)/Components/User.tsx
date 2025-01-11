@@ -1,14 +1,40 @@
 "use client"
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { userData } from "../user-data/UserData";
 
-export function User() {
-    const [users] = useState(userData); 
+export function User() {     
     const [filteredSearchTerm,setFilteredSearchTerm] = useState(userData);
+    const [showFilter,setShowFilter] = useState(false);
     const handleSearch  = (e:React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
         setFilteredSearchTerm(userData.filter(user=> Object.values(user).join(" ").toLocaleLowerCase().includes(value.toLowerCase())));
     }
+    
+    const [isOpen, setIsOpen] = useState(false); 
+    const dropdownRef = useRef<HTMLDivElement>(null); 
+
+    const toggleDropdown = () => {
+        setIsOpen((prev) => !prev);
+    };
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+        if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+            setIsOpen(false);
+        }
+        };
+        console.log(handleClickOutside);
+        
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
+
+    const handleClick = (value:string) => {
+        console.log(value);
+    }
+
     return (
         <div className="flex flex-col justify-center items-center h-screen">
             <form className="flex items-center max-w-sm mx-auto p-5">   
@@ -27,7 +53,57 @@ export function User() {
                     </svg>
                     <span className="sr-only">Search</span>
                 </button>
+                <img className="ml-3" width="24" onClick={()=>setShowFilter(prev => !prev)} height="24" src="https://img.icons8.com/material-outlined/24/horizontal-settings-mixer--v1.png" alt="horizontal-settings-mixer--v1"/>
             </form>
+            {showFilter && (
+                <div className="flex gap-64" ref={dropdownRef}>
+                    <div className="flex flex-col">
+                    <button
+                    onClick={toggleDropdown}
+                    className="py-2 px-4 mb-2.5 border shadow-md rounded-lg focus:outline-none"
+                    aria-haspopup="true"
+                    aria-expanded={isOpen}
+                    >
+                    Status
+                    </button>
+                    <div className="flex px-2 pb-2">
+                        <input type="checkbox" className="shrink-0 mt-0.5 border-gray-200 rounded text-blue-600 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-800 dark:border-neutral-700 dark:checked:bg-blue-500 dark:checked:border-blue-500 dark:focus:ring-offset-gray-800" id="hs-default-checkbox"/>
+                        <label className="text-sm text-gray-500 ms-3 dark:text-neutral-400">Adult</label>
+                    </div>
+                    {isOpen && (
+                    <div className="absolute mt-10 w-48 bg-white border border-gray-300 rounded-lg shadow-lg z-10">
+                        <a
+                        href="#"
+                        className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+                        role="menuitem"
+                        onClick={()=>{
+                            handleClick("Married")
+                            toggleDropdown();
+                        }}
+                        >
+                        Married
+                        </a>
+                        <a
+                        href="#"
+                        className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+                        role="menuitem"
+                        onClick={()=>{
+                            handleClick("Unmarried")
+                            toggleDropdown();
+                        }}
+                        >
+                        Unmarried
+                        </a>
+                    </div>
+                    
+                    )}
+                    </div>
+                    <div className="flex">
+                         <img onClick={()=>setShowFilter(false)} width="48" height="48" src="https://img.icons8.com/pulsar-line/48/submit-for-approval.png" alt="submit-for-approval"/>
+                    </div>
+
+                </div>
+            )}
             <div className="overflow-hidden rounded-lg border border-gray-200 shadow-md">
                 <table className="w-full border-collapse bg-white text-left text-sm text-gray-500">
                     <thead className="bg-gray-50">
@@ -37,8 +113,7 @@ export function User() {
                     </thead>
                     {filteredSearchTerm.length > 0 ? ( 
                     filteredSearchTerm.map((user, index) => (
-                        <div key={index}>
-                            <tbody className="divide-y divide-gray-100 border-t border-gray-100">
+                            <tbody key={index} className="divide-y divide-gray-100 border-t border-gray-100">
                                 <tr className="hover:bg-gray-50">
                                     <th className="flex gap-3 px-6 py-4 font-normal text-gray-900">
                                     <div className="relative h-10 w-10">
@@ -59,7 +134,6 @@ export function User() {
                                     <td className="px-6 py-4">{user.username}</td>
                                 </tr>
                             </tbody>
-                        </div>
                     ))):null}
                 </table>
             </div>
